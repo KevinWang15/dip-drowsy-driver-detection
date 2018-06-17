@@ -38,7 +38,6 @@ std::vector<std::string> readFileToVector(const std::string& filename)
 
 void estimate_head_pose_on_frameFileName(const std::string& frameFileName, HeadPoseEstimation estimator, std::vector<head_pose>& prev_poses)
 {
-    cout << "Estimating head pose on " << frameFileName << endl;
 #ifdef OPENCV3
     Mat img = imread(frameFileName, IMREAD_COLOR);
 #else
@@ -59,7 +58,6 @@ void estimate_head_pose_on_frameFileName(const std::string& frameFileName, HeadP
         nbfaces += poses.size(); // this is completly artifical: the only purpose is to make sure the compiler does not optimize away estimator.poses()
     }
 
-    cout << "Found " << nbfaces/NB_TESTS << " face(s)" << endl;
     static size_t img_id = 0;
 
     auto poses = estimator.poses();
@@ -89,7 +87,7 @@ void estimate_head_pose_on_frameFileName(const std::string& frameFileName, HeadP
         }
         prev_poses = poses;
     } else {
-        cout << "Head pose not calculated!" << endl;
+        // cout << "Head pose not calculated!" << endl;
     }
 
     imwrite(std::to_string(img_id) + "_head_pose.png", estimator.drawDetections(img, all_features, poses));
@@ -124,7 +122,6 @@ int main(int argc, char **argv)
     auto estimator = HeadPoseEstimation(argv[1]);
     estimator.focalLength = 500;
 
-    cout << "Running " << NB_TESTS << " loops to get a good performance estimate..." << endl;
 #ifdef HEAD_POSE_ESTIMATION_DEBUG
     cerr <<  "ATTENTION! The benchmark is compiled in DEBUG mode: the performance is no going to be good!!" << endl;
 #endif
@@ -143,24 +140,26 @@ int main(int argc, char **argv)
 
     // Single image file
     if (fileName.find(".jpg") != std::string::npos or fileName.find(".png") != std::string::npos) {
-        cout << ".jpg or .png file" << endl;
+
         estimate_head_pose_on_frameFileName(fileName, estimator, prev_poses);
     }
 
     // Multiple lines
     else {
-        cout << ".txt file" << endl;
         // Read file
         std::string frameFilesTxt(fileName);
         std::vector<std::string> frameFileNames = readFileToVector(frameFilesTxt);
 
-        if (frameFileNames.size() == 0) {
-            cout << fileName << "does not exist, or has no image names" << endl;
-        }
+        // if (frameFileNames.size() == 0) {
+        //     cout << fileName << "does not exist, or has no image names" << endl;
+        // }
 
         for(auto frameFileName: frameFileNames) {
-            if (frameFileName.find("jpg") != std::string::npos or frameFileName.find("png") != std::string::npos) {
-                estimate_head_pose_on_frameFileName(frameFileName, estimator, prev_poses);
+            try{
+              if (frameFileName.find("jpg") != std::string::npos or frameFileName.find("png") != std::string::npos) {
+                  estimate_head_pose_on_frameFileName(frameFileName, estimator, prev_poses);
+              }
+            } catch(...) {
             }
         }
     }
