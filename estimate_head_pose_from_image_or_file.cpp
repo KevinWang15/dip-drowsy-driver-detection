@@ -63,6 +63,28 @@ void estimate_head_pose_on_frameFileName(const std::string& frameFileName, HeadP
     auto poses = estimator.poses();
     if (poses.size() == 1) {
         for(auto pose : poses) {
+
+                    if(all_features.size()!=1){
+                      continue;
+                    }
+
+                    auto feature=all_features[0];
+
+                    cout << "{\"features\": [";
+
+                    for(auto point:feature){
+
+                      cout << "[";
+                      cout <<setprecision(4) << fixed << point.x;
+                      cout << ",";
+                      cout << setprecision(4) << fixed << point.y;
+                      cout << "],";
+
+                    }
+
+                    cout << "],";
+
+
                     pose = pose.inv();
                     double raw_yaw, raw_pitch, raw_roll;
                     tf::Matrix3x3 mrot(
@@ -80,10 +102,12 @@ void estimate_head_pose_on_frameFileName(const std::string& frameFileName, HeadP
                     yaw = raw_yaw;
                     pitch = -raw_roll;
 
-                    cout << setprecision(4) << fixed << "{\"yaw\":" << todeg(yaw) << ", \"pitch\":" << todeg(pitch) << ", \"roll\":" << todeg(roll) << ", ";
+                    cout << setprecision(4) << fixed << "\"yaw\":" << todeg(yaw) << ", \"pitch\":" << todeg(pitch) << ", \"roll\":" << todeg(roll) << ", ";
                     cout << setprecision(4) << fixed << "\"filename\":" << "\"" << frameFileName << "\"" << ", ";
                     cout << "\"img_id\":" << img_id << ", ";
-                    cout << setprecision(4) << fixed << "\"x\":" << pose(0,3) << ", \"y\":" << pose(1,3) << ", \"z\":" << pose(2,3) << "},\n";
+                    cout << setprecision(4) << fixed << "\"x\":" << pose(0,3) << ", \"y\":" << pose(1,3) << ", \"z\":" << pose(2,3) << ",";
+
+                    cout << "},\n";
         }
         prev_poses = poses;
     } else {
