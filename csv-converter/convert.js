@@ -1,6 +1,7 @@
 const fs = require("fs");
 const json5 = require("json5");
 let dataset = fs.readFileSync("./dataset.csv", { encoding: "UTF8" }).split("\n");
+const fillToCols = 64;
 
 const LabelEnum = {
   normal: 0,
@@ -97,7 +98,11 @@ Object.keys(mapVideoIdToData).forEach(videoId => {
     vectors.push(timeFrame.join("|"));
   });
 
+  while (vectors.length < fillToCols) {
+    vectors.push((new Array(142)).fill(0).join("|"))
+  }
   csvLines.push(vectors.join(","));
 });
+
 
 fs.writeFileSync("DATA.csv", csvLines.join("\n"), { encoding: "UTF8" });
