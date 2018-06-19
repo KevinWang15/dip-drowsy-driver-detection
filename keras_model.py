@@ -3,6 +3,7 @@ import numpy as np
 from keras.layers import Dense
 from keras.layers import LSTM
 from keras.models import Sequential
+from keras import optimizers
 from tensorflow import set_random_seed
 
 # https://machinelearningmastery.com/reproducible-results-neural-networks-keras/
@@ -12,6 +13,7 @@ set_random_seed(0)
 
 layers = 1
 classes = 3
+num_of_features = 144
 
 
 def get_one_hot(targets, nb_classes):
@@ -19,7 +21,7 @@ def get_one_hot(targets, nb_classes):
 
 
 def mapTo3dArray(param):
-    new_obj = np.empty((param.shape[0], param.shape[1], 145), np.float32)
+    new_obj = np.empty((param.shape[0], param.shape[1], num_of_features + 1), np.float32)
 
     for x in range(param.shape[0]):
         for y in range(param.shape[1]):
@@ -51,12 +53,14 @@ for layer in range(layers):
     model.add(LSTM(
         300,
         dropout=0.1,
-        batch_input_shape=(None, 63, 145),
+        batch_input_shape=(None, 63, num_of_features + 1),
     ))
 model.add(Dense(classes, activation='softmax'))
-model.compile(loss='categorical_crossentropy', optimizer="adam", metrics=['acc'])
+model.compile(loss='categorical_crossentropy',
+              optimizer=optimizers.Adam(lr=0.0001)
+              , metrics=['acc'])
 
-model.fit(X_train, y_train, epochs=30, batch_size=64)
+model.fit(X_train, y_train, epochs=500, batch_size=32)
 
 # Final evaluation of the model
 scores = model.evaluate(X_test, y_test, verbose=0)
