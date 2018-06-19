@@ -115,12 +115,21 @@ Object.keys(mapVideoIdToData).forEach(videoId => {
 
     timeFrame.push(leftEyeOpenness);
     timeFrame.push(rightEyeOpenness);
-    
+
+    item.features.forEach((feature, index) => {
+      if (index === 0) {
+        timeFrame = timeFrame.concat(0, 0);
+      } else {
+        timeFrame = timeFrame.concat(item.features[index][0] - item.features[index - 1][0],
+          item.features[index][1] - item.features[index - 1][1]);
+      }
+    });
+
     vectors.push(timeFrame.join("|"));
   });
 
   while (vectors.length < fillToCols) {
-    vectors.push((new Array(8)).fill(0).join("|"))
+    vectors.push((new Array(144)).fill(0).join("|"))
   }
 
   if (testingUserIds.indexOf(+video.userId) >= 0) {
