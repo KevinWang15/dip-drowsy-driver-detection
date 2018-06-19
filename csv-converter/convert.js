@@ -11,6 +11,10 @@ const LabelEnum = {
 
 const testingUserIds = [2, 4, 8, 13, 17, 19, 26, 29];
 
+// 根据实际数据测量得到
+const eyeOpennessMax = 1.111111112;
+const eyeOpennessMin = 0.666666666;
+
 // 读取datasetMap
 /**
  * @type {{[userId] : {[userVideoId] : number}}}
@@ -87,6 +91,7 @@ files.forEach(file => {
 // 生成最终的csv数据
 let trainingCsvLines = [];
 let testingCsvLines = [];
+
 Object.keys(mapVideoIdToData).forEach(videoId => {
   let video = mapVideoIdToData[videoId];
   let vectors = [];
@@ -97,6 +102,17 @@ Object.keys(mapVideoIdToData).forEach(videoId => {
     timeFrame = timeFrame.concat([item.yaw, item.pitch, item.roll, item.x, item.y, item.z]);
     item.features.forEach((feature, index) => {
       //TODO: 如何更好地使用feature，如：计算相邻两坐标的差值等
+
+      // https://www.pyimagesearch.com/wp-content/uploads/2017/04/facial_landmarks_68markup.jpg
+      let leftEyeOpenness =
+        (item.features[41][1] - item.features[37][1] + item.features[40][1] - item.features[38][1]) / (item.features[39][0] - item.features[36][0]);
+      let rightEyeOpenness =
+        (item.features[47][1] - item.features[43][1] + item.features[46][1] - item.features[44][1]) / (item.features[45][0] - item.features[42][0]);
+
+      // 归一化
+      leftEyeOpenness = (leftEyeOpenness - eyeOpennessMin) / (eyeOpennessMax - eyeOpennessMin);
+      rightEyeOpenness = (rightEyeOpenness - eyeOpennessMin) / (eyeOpennessMax - eyeOpennessMin);
+
       if (index === 0) {
         timeFrame = timeFrame.concat(0, 0);
       } else {
@@ -117,7 +133,6 @@ Object.keys(mapVideoIdToData).forEach(videoId => {
     trainingCsvLines.push(vectors.join(","));
   }
 });
-
 
 fs.writeFileSync("TRAIN.csv", trainingCsvLines.join("\n"), { encoding: "UTF8" });
 fs.writeFileSync("TEST.csv", testingCsvLines.join("\n"), { encoding: "UTF8" });
