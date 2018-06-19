@@ -1,3 +1,9 @@
+/**
+  batch_filename_generator.js
+  生成预处理的任务清单（即图片列表）
+  所有图片分成4批，这样可以在4核CPU上同时跑，每个核都用满
+**/
+
 const fs = require("fs");
 const path = require("path");
 
