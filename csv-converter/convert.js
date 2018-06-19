@@ -100,31 +100,27 @@ Object.keys(mapVideoIdToData).forEach(videoId => {
   video.sequences.forEach(item => {
     let timeFrame = [];
     timeFrame = timeFrame.concat([item.yaw, item.pitch, item.roll, item.x, item.y, item.z]);
-    item.features.forEach((feature, index) => {
-      //TODO: 如何更好地使用feature，如：计算相邻两坐标的差值等
 
-      // https://www.pyimagesearch.com/wp-content/uploads/2017/04/facial_landmarks_68markup.jpg
-      let leftEyeOpenness =
-        (item.features[41][1] - item.features[37][1] + item.features[40][1] - item.features[38][1]) / (item.features[39][0] - item.features[36][0]);
-      let rightEyeOpenness =
-        (item.features[47][1] - item.features[43][1] + item.features[46][1] - item.features[44][1]) / (item.features[45][0] - item.features[42][0]);
+    //TODO: 如何更好地使用feature，如：计算相邻两坐标的差值等
 
-      // 归一化
-      leftEyeOpenness = (leftEyeOpenness - eyeOpennessMin) / (eyeOpennessMax - eyeOpennessMin);
-      rightEyeOpenness = (rightEyeOpenness - eyeOpennessMin) / (eyeOpennessMax - eyeOpennessMin);
+    // https://www.pyimagesearch.com/wp-content/uploads/2017/04/facial_landmarks_68markup.jpg
+    let leftEyeOpenness =
+      (item.features[41][1] - item.features[37][1] + item.features[40][1] - item.features[38][1]) / (item.features[39][0] - item.features[36][0]);
+    let rightEyeOpenness =
+      (item.features[47][1] - item.features[43][1] + item.features[46][1] - item.features[44][1]) / (item.features[45][0] - item.features[42][0]);
 
-      if (index === 0) {
-        timeFrame = timeFrame.concat(0, 0);
-      } else {
-        timeFrame = timeFrame.concat(item.features[index][0] - item.features[index - 1][0],
-          item.features[index][1] - item.features[index - 1][1]);
-      }
-    });
+    // 归一化
+    leftEyeOpenness = (leftEyeOpenness - eyeOpennessMin) / (eyeOpennessMax - eyeOpennessMin);
+    rightEyeOpenness = (rightEyeOpenness - eyeOpennessMin) / (eyeOpennessMax - eyeOpennessMin);
+
+    timeFrame.push(leftEyeOpenness);
+    timeFrame.push(rightEyeOpenness);
+    
     vectors.push(timeFrame.join("|"));
   });
 
   while (vectors.length < fillToCols) {
-    vectors.push((new Array(142)).fill(0).join("|"))
+    vectors.push((new Array(8)).fill(0).join("|"))
   }
 
   if (testingUserIds.indexOf(+video.userId) >= 0) {
