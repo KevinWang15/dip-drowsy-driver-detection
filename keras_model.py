@@ -4,8 +4,6 @@ from keras.layers import Dense
 from keras.layers import LSTM
 from keras.models import Sequential
 
-np.random.seed(7)
-
 layers = 1
 classes = 3
 
@@ -26,36 +24,33 @@ def mapTo3dArray(param):
     return new_obj
 
 
-def load_data(ratio):
-    DATA = np.genfromtxt('DATA.csv', delimiter=',', dtype='str',
-                         usecols=np.arange(0, 64), filling_values="")
-    N = DATA.shape[0]
+def load_data():
+    TRAIN_DATA = np.genfromtxt('TRAIN.csv', delimiter=',', dtype='str',
+                               usecols=np.arange(0, 64), filling_values="")
+    TEST_DATA = np.genfromtxt('TEST.csv', delimiter=',', dtype='str',
+                              usecols=np.arange(0, 64), filling_values="")
 
-    ratio = (ratio * N).astype(np.int32)
-    ind = np.random.permutation(N)
-    X_train = mapTo3dArray(DATA[ind[:ratio[0]], 1:])
-    X_val = mapTo3dArray(DATA[ind[ratio[0]:ratio[1]], 1:])
-    X_test = mapTo3dArray(DATA[ind[ratio[1]:], 1:])
-    y_train = get_one_hot(DATA[ind[:ratio[0]], 0].astype(np.int), classes)
-    y_val = get_one_hot(DATA[ind[ratio[0]:ratio[1]], 0].astype(np.int), classes)
-    y_test = get_one_hot(DATA[ind[ratio[1]:], 0].astype(np.int), classes)
-    return X_train, X_val, X_test, y_train, y_val, y_test
+    X_train = mapTo3dArray(TRAIN_DATA[:, 1:])
+    X_test = mapTo3dArray(TEST_DATA[:, 1:])
+
+    y_train = get_one_hot(TRAIN_DATA[:, 0].astype(np.int), classes)
+    y_test = get_one_hot(TEST_DATA[:, 0].astype(np.int), classes)
+    return X_train, X_test, y_train, y_test
 
 
-ratio = np.array([0.8, 0.9])
-X_train, X_val, X_test, y_train, y_val, y_test = load_data(ratio)
+X_train, X_test, y_train, y_test = load_data()
 
 model = Sequential()
 for layer in range(layers):
     model.add(LSTM(
-        300,
-        dropout=0.5,
+        200,
+        dropout=0.2,
         batch_input_shape=(None, 63, 142),
     ))
 model.add(Dense(classes, activation='softmax'))
 model.compile(loss='categorical_crossentropy', optimizer="adam", metrics=['acc'])
 
-model.fit(X_train, y_train, epochs=10, batch_size=64, validation_data=(X_val, y_val))
+model.fit(X_train, y_train, epochs=10, batch_size=32)
 
 # Final evaluation of the model
 scores = model.evaluate(X_test, y_test, verbose=0)

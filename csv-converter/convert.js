@@ -9,6 +9,8 @@ const LabelEnum = {
   fatigue: 2,
 };
 
+const testingUserIds = [2, 4, 8, 13, 17, 19, 26, 29];
+
 // 读取datasetMap
 /**
  * @type {{[userId] : {[userVideoId] : number}}}
@@ -69,6 +71,7 @@ files.forEach(file => {
           let videoId = mapUserIdAndUserVideoIdToVideoId[userId][userVideoId];
           if (!mapVideoIdToData[videoId]) {
             mapVideoIdToData[videoId] = {
+              userId,
               videoId,
               label: mapVideoIdToLabel[videoId],
               sequences: [],
@@ -82,7 +85,8 @@ files.forEach(file => {
 });
 
 // 生成最终的csv数据
-let csvLines = [];
+let trainingCsvLines = [];
+let testingCsvLines = [];
 Object.keys(mapVideoIdToData).forEach(videoId => {
   let video = mapVideoIdToData[videoId];
   let vectors = [];
@@ -91,9 +95,14 @@ Object.keys(mapVideoIdToData).forEach(videoId => {
   video.sequences.forEach(item => {
     let timeFrame = [];
     timeFrame = timeFrame.concat([item.yaw, item.pitch, item.roll, item.x, item.y, item.z]);
-    item.features.forEach(feature => {
+    item.features.forEach((feature, index) => {
       //TODO: 如何更好地使用feature，如：计算相邻两坐标的差值等
-      timeFrame = timeFrame.concat(feature[0], feature[1]);
+      if (index === 0) {
+        timeFrame = timeFrame.concat(0, 0);
+      } else {
+        timeFrame = timeFrame.concat(item.features[index][0] - item.features[index - 1][0],
+          item.features[index][1] - item.features[index - 1][1]);
+      }
     });
     vectors.push(timeFrame.join("|"));
   });
@@ -101,8 +110,14 @@ Object.keys(mapVideoIdToData).forEach(videoId => {
   while (vectors.length < fillToCols) {
     vectors.push((new Array(142)).fill(0).join("|"))
   }
-  csvLines.push(vectors.join(","));
+
+  if (testingUserIds.indexOf(+video.userId) >= 0) {
+    testingCsvLines.push(vectors.join(","));
+  } else {
+    trainingCsvLines.push(vectors.join(","));
+  }
 });
 
 
-fs.writeFileSync("DATA.csv", csvLines.join("\n"), { encoding: "UTF8" });
+fs.writeFileSync("TRAIN.csv", trainingCsvLines.join("\n"), { encoding: "UTF8" });
+fs.writeFileSync("TEST.csv", testingCsvLines.join("\n"), { encoding: "UTF8" });
